@@ -1,4 +1,4 @@
-import rawgApi from "./api.js";
+import rawgApi from "./rawgApi.js";
 
 export async function getTrendingGames() {
   const { data } = await rawgApi.get("/games", {

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import springApi from "../services/springApi.js";
 
 interface Game {
   id: number;
@@ -31,6 +32,31 @@ function GameResult({ games }: GameResultProps) {
     setStatus(null);
   }
 
+  async function handleSaveReview() {
+    if (rating === 0) {
+      setStatus({ type: "error", message: "Por favor, selecione uma nota." });
+      return;
+    }
+    setIsSaving(true);
+    setStatus(null);
+
+    try {
+      await springApi.post("/reviews", {
+        name: selectedGame!.name,
+        rating: rating,
+        comment: comment,
+      });
+
+      setStatus({ type: "success", message: "Avaliação salva com sucesso!" });
+    } catch (error) {
+      setStatus({
+        type: "error",
+        message: "Ocorreu um erro ao salvar sua avaliação.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }
   return (
     <div className="space-y-8">
       {!games || games.length === 0 ? (
@@ -189,6 +215,7 @@ function GameResult({ games }: GameResultProps) {
 
                   <button
                     type="button"
+                    onClick={handleSaveReview}
                     disabled={isSaving || status?.type === "success"}
                     className="flex-1 rounded-2xl bg-amber-400 py-3 text-sm font-bold text-slate-900 shadow-lg shadow-amber-400/20 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-500 disabled:shadow-none"
                   >
