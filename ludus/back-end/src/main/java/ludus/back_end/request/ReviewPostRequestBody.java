@@ -16,4 +16,6 @@ public class ReviewPostRequestBody {
     private int rating;
 
     private String comment;
+
+    private String backgroundImg;
 }

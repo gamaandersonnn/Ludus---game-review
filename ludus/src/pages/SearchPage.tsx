@@ -1,8 +1,8 @@
 import Header from "../components/Header.js";
 import { getGames } from "../services/gameService.js";
 import { useEffect, useState } from "react";
-import GameResults from "../components/GameResults.js";
-import GameResultsSkeleton from "../components/GameResultsSkeleton.js";
+import GameResultsReviewCard from "../components/GameResultsReviewCard.js";
+import GameResultsReviewCardSkeleton from "../components/GameResultsReviewCardSkeleton.js";
 import { useSearchParams } from "react-router-dom";
 
 interface Game {
@@ -64,9 +64,9 @@ function SearchPage() {
                 <div className="mt-5 h-px w-full bg-gradient-to-r from-amber-400/40 via-white/5 to-transparent" />
               </div>
               {isLoading ? (
-                <GameResultsSkeleton />
+                <GameResultsReviewCardSkeleton />
               ) : (
-                <GameResults games={games} />
+                <GameResultsReviewCard games={games} />
               )}
             </div>
           )

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { use, useState } from "react";
 import springApi from "../services/springApi.js";
 
 interface Game {
@@ -45,6 +45,7 @@ function GameResult({ games }: GameResultProps) {
         name: selectedGame!.name,
         rating: rating,
         comment: comment,
+        backgroundImg: selectedGame!.background_image,
       });
 
       setStatus({ type: "success", message: "Avaliação salva com sucesso!" });
@@ -183,13 +184,18 @@ function GameResult({ games }: GameResultProps) {
                   <label className="block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                     Comentário
                   </label>
+
                   <textarea
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
+                    maxLength={1000}
                     rows={4}
                     placeholder="Deixe sua opinião sobre o jogo..."
                     className="w-full rounded-2xl border border-white/[0.08] bg-white/[0.04] p-4 text-sm text-white placeholder-slate-600 outline-none transition focus:border-amber-400/40 focus:bg-white/[0.06] resize-none"
                   />
+                  <span className="text-[10px] text-slate-500">
+                    {comment.length}/1000
+                  </span>
                 </div>
 
                 {status && (

@@ -31,6 +31,7 @@ public class ReviewService {
                 .name(reviewPostRequestBody.getName())
                 .rating(reviewPostRequestBody.getRating())
                 .comment(reviewPostRequestBody.getComment())
+                .backgroundImg(reviewPostRequestBody.getBackgroundImg())
                 .build());
     }
 
@@ -43,6 +44,14 @@ public class ReviewService {
                 .name(reviewPutRequestBody.getName())
                 .rating(reviewPutRequestBody.getRating())
                 .comment(reviewPutRequestBody.getComment())
+                .backgroundImg(reviewPutRequestBody.getBackgroundImg())
                 .build());
+    }
+
+    public void deleteReview(Long id){
+        Review review = reviewRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Review not found"));
+
+        reviewRepository.delete(review);
     }
 }
