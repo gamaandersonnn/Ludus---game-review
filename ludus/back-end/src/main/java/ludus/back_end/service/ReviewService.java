@@ -2,55 +2,86 @@ package ludus.back_end.service;
 
 import lombok.RequiredArgsConstructor;
 import ludus.back_end.entity.Review;
+import ludus.back_end.entity.User;
 import ludus.back_end.repository.ReviewRepository;
+import ludus.back_end.repository.UserRepository;
 import ludus.back_end.request.ReviewPostRequestBody;
 import ludus.back_end.request.ReviewPutRequestBody;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @Service
 public class ReviewService {
 
     private final ReviewRepository reviewRepository;
+    private final UserRepository userRepository;
 
-    public List<Review> listAllReviews(){
-        return reviewRepository.findAll();
+    private User getLoggedUser(){
+
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        String uid = (String) auth.getPrincipal();
+
+        @SuppressWarnings("unchecked")
+        var details = (Map<String, String>) auth.getDetails();
+
+        return userRepository.findById(uid).orElseGet(() ->
+                userRepository.save(User.builder()
+                        .uid(uid)
+                        .name(details.get("name"))
+                        .email(details.get("email"))
+                        .picture(details.get("picture"))
+                        .build())
+        );
     }
 
-    public Review findByIdReview(long id){
-        return reviewRepository.findById(id)
-                .orElseThrow(()-> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Review not found"));
+    public List<Review> getAllReviews(){
+        User user = getLoggedUser();
+        return reviewRepository.findByUser(user);
     }
 
-    public Review saveReview(ReviewPostRequestBody reviewPostRequestBody){
+    public Review saveReview(ReviewPostRequestBody dto){
+        User user = getLoggedUser();
+
         return reviewRepository.save(Review.builder()
-                .name(reviewPostRequestBody.getName())
-                .rating(reviewPostRequestBody.getRating())
-                .comment(reviewPostRequestBody.getComment())
-                .backgroundImg(reviewPostRequestBody.getBackgroundImg())
+                .name(dto.getName())
+                .rating(dto.getRating())
+                .comment(dto.getComment())
+                .backgroundImg(dto.getBackgroundImg())
+                .user(user)
                 .build());
     }
 
-    public Review updateReview(Long id, ReviewPutRequestBody reviewPutRequestBody){
+    public Review updateReview(Long id, ReviewPutRequestBody dto){
+        User user = getLoggedUser();
+
         Review review = reviewRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Review not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
 
-        return reviewRepository.save(Review.builder()
-                .id(review.getId())
-                .name(reviewPutRequestBody.getName())
-                .rating(reviewPutRequestBody.getRating())
-                .comment(reviewPutRequestBody.getComment())
-                .backgroundImg(reviewPutRequestBody.getBackgroundImg())
-                .build());
+        if (!review.getUser().getUid().equals(user.getUid())){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acess denied");
+        }
+
+        review.setName(dto.getName());
+        review.setRating(dto.getRating());
+        review.setComment(dto.getComment());
+        return reviewRepository.save(review);
     }
 
     public void deleteReview(Long id){
+        User user = getLoggedUser();
+
         Review review = reviewRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Review not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
+
+        if (!review.getUser().getUid().equals(user.getUid())){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acess denied");
+        }
 
         reviewRepository.delete(review);
     }

@@ -25,4 +25,8 @@ public class Review {
     private String comment;
 
     private String backgroundImg;
+
+    @ManyToOne
+    @JoinColumn(name = "user_uid")
+    private User user;
 }
