@@ -45,6 +45,19 @@ public class ReviewService {
         return reviewRepository.findByUser(user);
     }
 
+    public Review findById(Long id){
+        User user = getLoggedUser();
+
+        Review review = reviewRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
+
+        if (!review.getUser().getUid().equals(user.getUid())){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acess denied");
+        }
+
+        return review;
+    }
+
     public Review saveReview(ReviewPostRequestBody dto){
         User user = getLoggedUser();
 

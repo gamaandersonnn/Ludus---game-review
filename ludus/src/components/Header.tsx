@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
+import { useAuth } from "../hooks/useAuth.js";
+import { loginWithGoogle, logout } from "../services/firebase.js";
 
 interface User {
   name: string;
@@ -7,12 +9,8 @@ interface User {
 }
 
 function Header() {
-  const isAuthenticated = true;
+  const { user } = useAuth();
   const [showMenu, setShowMenu] = useState<boolean>(false);
-  const user: User = {
-    name: "Anderson",
-    picture: "https://i.pravatar.cc/150?img=3",
-  };
   const [query, setQuery] = useState<string>("");
   const navigate = useNavigate();
 
@@ -72,10 +70,10 @@ function Header() {
             Explorar
           </button>
 
-          {isAuthenticated ? (
+          {user ? (
             <div className="relative flex items-center gap-3">
               <span className="hidden text-sm font-medium text-slate-300 md:inline">
-                {user?.name || "jogador"}
+                {user?.displayName || "jogador"}
               </span>
 
               <div className="relative">
@@ -83,9 +81,9 @@ function Header() {
                   onClick={() => setShowMenu(!showMenu)}
                   className="relative h-9 w-9 overflow-hidden rounded-full ring-2 ring-white/10 transition hover:ring-amber-400/60"
                 >
-                  {user?.picture ? (
+                  {user?.photoURL ? (
                     <img
-                      src={user.picture}
+                      src={user.photoURL}
                       alt="user"
                       className="h-full w-full object-cover"
                     />
@@ -114,12 +112,12 @@ function Header() {
               </div>
             </div>
           ) : (
-            <Link
-              to="/login"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-400 text-slate-900 shadow-lg shadow-amber-400/20 transition hover:bg-amber-300"
+            <button
+              onClick={loginWithGoogle}
+              className="flex items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-sm font-bold text-slate-900 shadow-lg shadow-amber-400/20 transition hover:bg-amber-300"
             >
-              👤
-            </Link>
+              Entrar com Google
+            </button>
           )}
         </div>
       </div>

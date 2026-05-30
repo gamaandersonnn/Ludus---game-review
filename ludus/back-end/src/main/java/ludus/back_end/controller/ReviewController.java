@@ -21,12 +21,12 @@ public class ReviewController {
 
     @GetMapping
     public ResponseEntity<List<Review>> listAllReviews(){
-        return ResponseEntity.ok(reviewService.listAllReviews());
+        return ResponseEntity.ok(reviewService.getAllReviews());
     }
 
     @GetMapping(path = "/{id}")
     public ResponseEntity<Review> findReviewById(@PathVariable long id){
-        return ResponseEntity.ok(reviewService.findByIdReview(id));
+        return ResponseEntity.ok(reviewService.findById(id));
     }
 
     @PostMapping

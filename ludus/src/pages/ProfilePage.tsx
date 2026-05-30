@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import Header from "../components/Header.js";
 import ReviewCard from "../components/ReviewCard.js";
 import ReviewCardSkeleton from "../components/ReviewCardSkeleton.js";
 import springApi from "../services/springApi.js";
+import { useAuth } from "../hooks/useAuth.js";
+import { loginWithGoogle } from "../services/firebase.js";
 
 interface Review {
   id: number;
-  gameName: string;
-  gameBackgroundImage: string;
+  name: string;
+  backgroundImg: string;
   rating: number;
   comment: string;
   createdAt: string;
@@ -21,16 +24,14 @@ interface UserProfile {
 }
 
 function ProfilePage() {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [profile] = useState<UserProfile>({
-    name: "Anderson",
-    picture: "https://i.pravatar.cc/150?img=3",
-    totalReviews: 0,
-    averageRating: 0,
-  });
 
   useEffect(() => {
+    if (!user) return;
+
     const fetchReviews = async () => {
       try {
         setIsLoading(true);
@@ -44,7 +45,7 @@ function ProfilePage() {
     };
 
     fetchReviews();
-  }, []);
+  }, [user]);
 
   const totalReviews = reviews.length;
   const averageRating =
@@ -52,18 +53,39 @@ function ProfilePage() {
       ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
       : 0;
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+        <p className="text-slate-500 text-sm">Carregando...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] flex flex-col items-center justify-center gap-4">
+        <p className="text-white text-xl font-bold">Você não está logado</p>
+        <button
+          onClick={loginWithGoogle}
+          className="rounded-full bg-amber-400 px-6 py-3 text-sm font-bold text-slate-900 hover:bg-amber-300"
+        >
+          Entrar com Google
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
       <Header />
 
       <main className="mx-auto max-w-7xl px-6 py-12">
-        {/* Profile hero */}
         <div className="mb-12 flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex items-center gap-5">
             <div className="relative shrink-0">
               <img
-                src={profile.picture}
-                alt={profile.name}
+                src={user.photoURL ?? undefined}
+                alt={user.displayName ?? undefined}
                 className="h-20 w-20 rounded-2xl object-cover ring-2 ring-white/10"
               />
               <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-[9px] font-black text-slate-900">
@@ -75,7 +97,7 @@ function ProfilePage() {
                 Perfil
               </p>
               <h1 className="mt-0.5 text-3xl font-black leading-none tracking-tight text-white md:text-4xl">
-                {profile.name}
+                {user.displayName}
               </h1>
             </div>
           </div>
