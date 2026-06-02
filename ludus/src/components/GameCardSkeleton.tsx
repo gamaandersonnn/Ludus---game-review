@@ -1,8 +1,11 @@
 function GameCardSkeleton() {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 py-2">
-      {Array.from({ length: 10 }).map((_, i) => (
-        <div key={i} className="overflow-hidden rounded-2xl bg-[#13131a]">
+    <div className="flex gap-4 py-2">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div
+          key={i}
+          className="w-[calc(20%-12px)] shrink-0 overflow-hidden rounded-2xl bg-[#13131a]"
+        >
           <div className="relative aspect-[4/3] overflow-hidden bg-white/[0.04]">
             <div className="skeleton-shimmer absolute inset-0" />
           </div>

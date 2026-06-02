@@ -1,4 +1,5 @@
 import { useState } from "react";
+import springApi from "../services/springApi.js";
 
 interface Game {
   id: number;
@@ -31,58 +32,85 @@ function GameCard({ games }: GameCardProps) {
     setStatus(null);
   }
 
+  async function handleSaveReview() {
+    if (rating === 0) {
+      setStatus({ type: "error", message: "Por favor, selecione uma nota." });
+      return;
+    }
+    setIsSaving(true);
+    setStatus(null);
+
+    try {
+      await springApi.post("/reviews", {
+        name: selectedGame!.name,
+        rating,
+        comment,
+        backgroundImg: selectedGame!.background_image,
+      });
+      setStatus({ type: "success", message: "Avaliação salva com sucesso!" });
+    } catch (error) {
+      setStatus({
+        type: "error",
+        message: "Ocorreu um erro ao salvar sua avaliação.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   return (
     <div className="py-2">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+      <div className="flex gap-4">
         {games.map((game, index) => (
-          <button
-            key={game.id}
-            type="button"
-            onClick={() => {
-              setSelectedGame(game);
-              setStatus(null);
-            }}
-            className="group relative overflow-hidden rounded-2xl bg-[#13131a] text-left transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/60"
-          >
-            <div className="absolute left-3 top-3 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-[10px] font-bold text-amber-400 backdrop-blur-sm">
-              {String(index + 1).padStart(2, "0")}
-            </div>
-
-            <div className="relative aspect-[4/3] overflow-hidden">
-              <img
-                src={game.background_image}
-                alt={game.name}
-                className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#13131a] via-[#13131a]/40 to-transparent" />
-              <div className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 bg-gradient-to-tr from-amber-400/5 via-transparent to-amber-400/10" />
-            </div>
-
-            <div className="px-4 py-4">
-              <h3 className="text-sm font-bold leading-snug text-white line-clamp-2 transition-colors group-hover:text-amber-400">
-                {game.name}
-              </h3>
-              <div className="mt-2 flex items-center gap-1.5">
-                <div className="h-px flex-1 bg-white/10" />
-                <span className="text-[10px] font-medium uppercase tracking-widest text-slate-600">
-                  Avaliar
-                </span>
-                <svg
-                  className="h-3 w-3 text-slate-600 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-amber-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
+          <div key={game.id} className="w-[calc(20%-12px)] shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedGame(game);
+                setStatus(null);
+              }}
+              className="group relative w-full overflow-hidden rounded-2xl bg-[#13131a] text-left transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/60"
+            >
+              <div className="absolute left-3 top-3 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-[10px] font-bold text-amber-400 backdrop-blur-sm">
+                {String(index + 1).padStart(2, "0")}
               </div>
-            </div>
-          </button>
+
+              <div className="relative aspect-[4/3] overflow-hidden">
+                <img
+                  src={game.background_image}
+                  alt={game.name}
+                  className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#13131a] via-[#13131a]/40 to-transparent" />
+                <div className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 bg-gradient-to-tr from-amber-400/5 via-transparent to-amber-400/10" />
+              </div>
+
+              <div className="px-4 py-4">
+                <h3 className="text-sm font-bold leading-snug text-white line-clamp-2 transition-colors group-hover:text-amber-400">
+                  {game.name}
+                </h3>
+                <div className="mt-2 flex items-center gap-1.5">
+                  <div className="h-px flex-1 bg-white/10" />
+                  <span className="text-[10px] font-medium uppercase tracking-widest text-slate-600">
+                    Avaliar
+                  </span>
+                  <svg
+                    className="h-3 w-3 text-slate-600 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-amber-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </button>
+          </div>
         ))}
       </div>
 
@@ -155,10 +183,14 @@ function GameCard({ games }: GameCardProps) {
                   <textarea
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
+                    maxLength={1000}
                     rows={4}
                     placeholder="Deixe sua opinião sobre o jogo..."
                     className="w-full rounded-2xl border border-white/[0.08] bg-white/[0.04] p-4 text-sm text-white placeholder-slate-600 outline-none transition focus:border-amber-400/40 focus:bg-white/[0.06] resize-none"
                   />
+                  <span className="text-[10px] text-slate-500">
+                    {comment.length}/1000
+                  </span>
                 </div>
 
                 {status && (
@@ -184,6 +216,7 @@ function GameCard({ games }: GameCardProps) {
 
                   <button
                     type="button"
+                    onClick={handleSaveReview}
                     disabled={isSaving || status?.type === "success"}
                     className="flex-1 rounded-2xl bg-amber-400 py-3 text-sm font-bold text-slate-900 shadow-lg shadow-amber-400/20 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-500 disabled:shadow-none"
                   >
