@@ -103,7 +103,13 @@ function Header() {
                       >
                         <span className="text-base">👤</span> Perfil
                       </button>
-                      <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-300 transition hover:bg-white/[0.06] hover:text-white">
+                      <button
+                        onClick={() => {
+                          logout();
+                          setShowMenu(false);
+                        }}
+                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
+                      >
                         <span className="text-base">🚪</span> Sair
                       </button>
                     </div>

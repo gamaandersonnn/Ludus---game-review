@@ -9,7 +9,10 @@ const springApi = axios.create({
 });
 
 springApi.interceptors.request.use(async (config) => {
+  await auth.authStateReady();
+
   const user = auth.currentUser;
+
   if (user) {
     const token = await user.getIdToken();
     config.headers.Authorization = `Bearer ${token}`;
