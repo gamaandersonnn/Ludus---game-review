@@ -1,5 +1,21 @@
-import { use, useState } from "react";
+import { useState } from "react";
 import springApi from "../services/springApi.js";
+
+type GameStatus =
+  | "QUERO_JOGAR"
+  | "JOGANDO"
+  | "ZERADO"
+  | "COMPLETO"
+  | "ADIADO"
+  | "DROPADO";
+
+const statusOptions: { value: GameStatus; label: string; emoji: string }[] = [
+  { value: "JOGANDO", label: "Jogando", emoji: "🎮" },
+  { value: "ZERADO", label: "Zerado", emoji: "✅" },
+  { value: "COMPLETO", label: "Completo", emoji: "🏆" },
+  { value: "ADIADO", label: "Adiado", emoji: "⏸️" },
+  { value: "DROPADO", label: "Dropado", emoji: "❌" },
+];
 
 interface Game {
   id: number;
@@ -20,6 +36,7 @@ function GameResult({ games }: GameResultProps) {
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [rating, setRating] = useState<number>(0);
   const [comment, setComment] = useState<string>("");
+  const [gameStatus, setGameStatus] = useState<GameStatus | null>(null);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [status, setStatus] = useState<Status | null>(null);
 
@@ -29,6 +46,7 @@ function GameResult({ games }: GameResultProps) {
     setSelectedGame(null);
     setRating(0);
     setComment("");
+    setGameStatus(null);
     setStatus(null);
   }
 
@@ -37,17 +55,25 @@ function GameResult({ games }: GameResultProps) {
       setStatus({ type: "error", message: "Por favor, selecione uma nota." });
       return;
     }
+    if (!gameStatus) {
+      setStatus({
+        type: "error",
+        message: "Por favor, selecione o status do jogo.",
+      });
+      return;
+    }
     setIsSaving(true);
     setStatus(null);
 
     try {
       await springApi.post("/reviews", {
         name: selectedGame!.name,
-        rating: rating,
-        comment: comment,
+        rating,
+        comment,
         backgroundImg: selectedGame!.background_image,
+        status: gameStatus,
+        favorite: false,
       });
-
       setStatus({ type: "success", message: "Avaliação salva com sucesso!" });
     } catch (error) {
       setStatus({
@@ -58,6 +84,7 @@ function GameResult({ games }: GameResultProps) {
       setIsSaving(false);
     }
   }
+
   return (
     <div className="space-y-8">
       {!games || games.length === 0 ? (
@@ -97,19 +124,6 @@ function GameResult({ games }: GameResultProps) {
                   <div className="h-px flex-1 bg-white/[0.06]" />
                   <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-slate-600 transition-colors group-hover:text-amber-400/70">
                     Avaliar
-                    <svg
-                      className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2.5}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
                   </span>
                 </div>
               </div>
@@ -149,7 +163,7 @@ function GameResult({ games }: GameResultProps) {
               </button>
             </div>
 
-            <div className="px-6 pb-6">
+            <div className="px-6 pb-6 max-h-[70vh] overflow-y-auto">
               <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-amber-400">
                 Avaliar jogo
               </p>
@@ -158,6 +172,31 @@ function GameResult({ games }: GameResultProps) {
               </h3>
 
               <div className="mt-6 space-y-5">
+                {/* Status */}
+                <div className="space-y-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Status
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {statusOptions.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setGameStatus(opt.value)}
+                        className={`flex flex-col items-center gap-1 rounded-xl py-2.5 text-xs font-semibold transition-all ${
+                          gameStatus === opt.value
+                            ? "bg-amber-400 text-slate-900 shadow-lg shadow-amber-400/30"
+                            : "bg-white/[0.06] text-slate-400 hover:bg-white/10"
+                        }`}
+                      >
+                        <span className="text-base">{opt.emoji}</span>
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Nota */}
                 <div className="space-y-2">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                     Sua nota
@@ -180,11 +219,11 @@ function GameResult({ games }: GameResultProps) {
                   </div>
                 </div>
 
+                {/* Comentário */}
                 <div className="space-y-2">
                   <label className="block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                     Comentário
                   </label>
-
                   <textarea
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
@@ -200,11 +239,7 @@ function GameResult({ games }: GameResultProps) {
 
                 {status && (
                   <div
-                    className={`rounded-2xl border px-4 py-3 text-sm ${
-                      status.type === "success"
-                        ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-                        : "border-red-500/20 bg-red-500/10 text-red-400"
-                    }`}
+                    className={`rounded-2xl border px-4 py-3 text-sm ${status.type === "success" ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" : "border-red-500/20 bg-red-500/10 text-red-400"}`}
                   >
                     {status.message}
                   </div>
@@ -218,7 +253,6 @@ function GameResult({ games }: GameResultProps) {
                   >
                     Cancelar
                   </button>
-
                   <button
                     type="button"
                     onClick={handleSaveReview}

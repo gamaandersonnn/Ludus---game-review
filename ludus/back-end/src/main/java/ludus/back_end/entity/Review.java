@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ludus.back_end.enums.GameStatus;
 
 @Data
 @AllArgsConstructor
@@ -25,6 +26,9 @@ public class Review {
     private String comment;
 
     private String backgroundImg;
+
+    @Enumerated(EnumType.STRING)
+    private GameStatus status;
 
     @ManyToOne
     @JoinColumn(name = "user_uid")

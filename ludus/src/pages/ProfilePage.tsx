@@ -7,20 +7,33 @@ import springApi from "../services/springApi.js";
 import { useAuth } from "../hooks/useAuth.js";
 import { loginWithGoogle } from "../services/firebase.js";
 
+type GameStatus =
+  | "FAVORITOS"
+  | "JOGANDO"
+  | "ZERADO"
+  | "COMPLETO"
+  | "ADIADO"
+  | "DROPADO";
+type TabStatus = "TODOS" | "FAVORITOS" | GameStatus;
+
+const tabs = [
+  { value: "TODOS", label: "Todos", emoji: "🗂️" },
+  { value: "FAVORITOS", label: "Favoritos", emoji: "⭐" }, // <- novo
+  { value: "JOGANDO", label: "Jogando", emoji: "🎮" },
+  { value: "ZERADO", label: "Zerado", emoji: "✅" },
+  { value: "COMPLETO", label: "Completo", emoji: "🏆" },
+  { value: "ADIADO", label: "Adiado", emoji: "⏸️" },
+  { value: "DROPADO", label: "Dropado", emoji: "❌" },
+];
+
 interface Review {
   id: number;
   name: string;
   backgroundImg: string;
   rating: number;
   comment: string;
+  status: GameStatus;
   createdAt: string;
-}
-
-interface UserProfile {
-  name: string;
-  picture: string;
-  totalReviews: number;
-  averageRating: number;
 }
 
 function ProfilePage() {
@@ -28,10 +41,10 @@ function ProfilePage() {
   const navigate = useNavigate();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [activeTab, setActiveTab] = useState<TabStatus>("TODOS");
 
   useEffect(() => {
     if (!user) return;
-
     const fetchReviews = async () => {
       try {
         setIsLoading(true);
@@ -43,9 +56,15 @@ function ProfilePage() {
         setIsLoading(false);
       }
     };
-
     fetchReviews();
   }, [user]);
+
+  const filteredReviews =
+    activeTab === "TODOS"
+      ? reviews
+      : activeTab === "FAVORITOS"
+        ? reviews.filter((r) => r.favorite)
+        : reviews.filter((r) => r.status === activeTab);
 
   const totalReviews = reviews.length;
   const averageRating =
@@ -78,8 +97,8 @@ function ProfilePage() {
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
       <Header />
-
       <main className="mx-auto max-w-7xl px-6 py-12">
+        {/* Profile hero */}
         <div className="mb-12 flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex items-center gap-5">
             <div className="relative shrink-0">
@@ -102,7 +121,6 @@ function ProfilePage() {
             </div>
           </div>
 
-          {/* Stats */}
           <div className="flex items-center gap-4">
             <div className="rounded-2xl border border-white/[0.06] bg-[#13131a] px-5 py-4 text-center">
               <p className="text-2xl font-black text-white">{totalReviews}</p>
@@ -123,11 +141,7 @@ function ProfilePage() {
                 {[1, 2, 3, 4, 5].map((s) => (
                   <span
                     key={s}
-                    className={`text-base ${
-                      s <= Math.round(averageRating)
-                        ? "text-amber-400"
-                        : "text-white/10"
-                    }`}
+                    className={`text-base ${s <= Math.round(averageRating) ? "text-amber-400" : "text-white/10"}`}
                   >
                     ★
                   </span>
@@ -141,17 +155,47 @@ function ProfilePage() {
         </div>
 
         {/* Divider */}
-        <div className="mb-10 flex items-center gap-4">
+        <div className="mb-6 flex items-center gap-4">
           <div className="h-px flex-1 bg-gradient-to-r from-amber-400/40 via-white/5 to-transparent" />
           <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-600">
             Minhas avaliações
           </p>
         </div>
 
+        {/* Tabs */}
+        <div className="mb-8 flex gap-2 overflow-x-auto pb-2">
+          {tabs.map((tab) => {
+            const count =
+              tab.value === "TODOS"
+                ? reviews.length
+                : tab.value === "FAVORITOS"
+                  ? reviews.filter((r) => r.favorite).length
+                  : reviews.filter((r) => r.status === tab.value).length;
+            return (
+              <button
+                key={tab.value}
+                onClick={() => setActiveTab(tab.value)}
+                className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition-all ${
+                  activeTab === tab.value
+                    ? "bg-amber-400 text-slate-900"
+                    : "bg-white/[0.06] text-slate-400 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                {tab.emoji} {tab.label}
+                <span
+                  className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${activeTab === tab.value ? "bg-slate-900/30" : "bg-white/10"}`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
         {/* Content */}
         {isLoading ? (
           <ReviewCardSkeleton />
-        ) : reviews.length === 0 ? (
+        ) : filteredReviews.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-3xl bg-white/[0.04] text-3xl">
               🎮
@@ -163,11 +207,13 @@ function ProfilePage() {
               Nenhuma avaliação
             </h2>
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-slate-500">
-              Explore jogos em alta e deixe sua opinião para ela aparecer aqui.
+              {activeTab === "TODOS"
+                ? "Explore jogos em alta e deixe sua opinião."
+                : `Você não tem jogos com status "${tabs.find((t) => t.value === activeTab)?.label}".`}
             </p>
           </div>
         ) : (
-          <ReviewCard reviews={reviews} onReviewsChange={setReviews} />
+          <ReviewCard reviews={filteredReviews} onReviewsChange={setReviews} />
         )}
       </main>
     </div>

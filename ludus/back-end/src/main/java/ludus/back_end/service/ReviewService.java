@@ -3,6 +3,7 @@ package ludus.back_end.service;
 import lombok.RequiredArgsConstructor;
 import ludus.back_end.entity.Review;
 import ludus.back_end.entity.User;
+import ludus.back_end.enums.GameStatus;
 import ludus.back_end.repository.ReviewRepository;
 import ludus.back_end.repository.UserRepository;
 import ludus.back_end.request.ReviewPostRequestBody;
@@ -66,6 +67,7 @@ public class ReviewService {
                 .rating(dto.getRating())
                 .comment(dto.getComment())
                 .backgroundImg(dto.getBackgroundImg())
+                .status(dto.getStatus())
                 .user(user)
                 .build());
     }
@@ -83,6 +85,7 @@ public class ReviewService {
         review.setName(dto.getName());
         review.setRating(dto.getRating());
         review.setComment(dto.getComment());
+        review.setStatus(dto.getStatus());
         return reviewRepository.save(review);
     }
 
@@ -97,5 +100,10 @@ public class ReviewService {
         }
 
         reviewRepository.delete(review);
+    }
+
+    public List<Review> getReviewsByStatus(GameStatus status){
+        User user = getLoggedUser();
+        return reviewRepository.findByUserAndStatus(user, status);
     }
 }

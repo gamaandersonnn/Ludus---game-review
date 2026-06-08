@@ -1,6 +1,22 @@
 import { useState } from "react";
 import springApi from "../services/springApi.js";
 
+type GameStatus =
+  | "QUERO_JOGAR"
+  | "JOGANDO"
+  | "ZERADO"
+  | "COMPLETO"
+  | "ADIADO"
+  | "DROPADO";
+
+const statusOptions: { value: GameStatus; label: string; emoji: string }[] = [
+  { value: "JOGANDO", label: "Jogando", emoji: "🎮" },
+  { value: "ZERADO", label: "Zerado", emoji: "✅" },
+  { value: "COMPLETO", label: "Completo", emoji: "🏆" },
+  { value: "ADIADO", label: "Adiado", emoji: "⏸️" },
+  { value: "DROPADO", label: "Dropado", emoji: "❌" },
+];
+
 interface Game {
   id: number;
   name: string;
@@ -20,6 +36,7 @@ function GameCard({ games }: GameCardProps) {
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [rating, setRating] = useState<number>(0);
   const [comment, setComment] = useState<string>("");
+  const [gameStatus, setGameStatus] = useState<GameStatus | null>(null);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [status, setStatus] = useState<Status | null>(null);
 
@@ -29,12 +46,20 @@ function GameCard({ games }: GameCardProps) {
     setSelectedGame(null);
     setRating(0);
     setComment("");
+    setGameStatus(null);
     setStatus(null);
   }
 
   async function handleSaveReview() {
     if (rating === 0) {
       setStatus({ type: "error", message: "Por favor, selecione uma nota." });
+      return;
+    }
+    if (!gameStatus) {
+      setStatus({
+        type: "error",
+        message: "Por favor, selecione o status do jogo.",
+      });
       return;
     }
     setIsSaving(true);
@@ -46,6 +71,8 @@ function GameCard({ games }: GameCardProps) {
         rating,
         comment,
         backgroundImg: selectedGame!.background_image,
+        status: gameStatus,
+        favorite: false,
       });
       setStatus({ type: "success", message: "Avaliação salva com sucesso!" });
     } catch (error) {
@@ -74,7 +101,6 @@ function GameCard({ games }: GameCardProps) {
               <div className="absolute left-3 top-3 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-[10px] font-bold text-amber-400 backdrop-blur-sm">
                 {String(index + 1).padStart(2, "0")}
               </div>
-
               <div className="relative aspect-[4/3] overflow-hidden">
                 <img
                   src={game.background_image}
@@ -82,9 +108,7 @@ function GameCard({ games }: GameCardProps) {
                   className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#13131a] via-[#13131a]/40 to-transparent" />
-                <div className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 bg-gradient-to-tr from-amber-400/5 via-transparent to-amber-400/10" />
               </div>
-
               <div className="px-4 py-4">
                 <h3 className="text-sm font-bold leading-snug text-white line-clamp-2 transition-colors group-hover:text-amber-400">
                   {game.name}
@@ -94,19 +118,6 @@ function GameCard({ games }: GameCardProps) {
                   <span className="text-[10px] font-medium uppercase tracking-widest text-slate-600">
                     Avaliar
                   </span>
-                  <svg
-                    className="h-3 w-3 text-slate-600 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-amber-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2.5}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
                 </div>
               </div>
             </button>
@@ -145,7 +156,7 @@ function GameCard({ games }: GameCardProps) {
               </button>
             </div>
 
-            <div className="px-6 pb-6">
+            <div className="px-6 pb-6 max-h-[70vh] overflow-y-auto">
               <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-amber-400">
                 Avaliar jogo
               </p>
@@ -154,6 +165,31 @@ function GameCard({ games }: GameCardProps) {
               </h3>
 
               <div className="mt-6 space-y-5">
+                {/* Status */}
+                <div className="space-y-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Status
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {statusOptions.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setGameStatus(opt.value)}
+                        className={`flex flex-col items-center gap-1 rounded-xl py-2.5 text-xs font-semibold transition-all ${
+                          gameStatus === opt.value
+                            ? "bg-amber-400 text-slate-900 shadow-lg shadow-amber-400/30"
+                            : "bg-white/[0.06] text-slate-400 hover:bg-white/10"
+                        }`}
+                      >
+                        <span className="text-base">{opt.emoji}</span>
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Nota */}
                 <div className="space-y-2">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                     Sua nota
@@ -176,6 +212,7 @@ function GameCard({ games }: GameCardProps) {
                   </div>
                 </div>
 
+                {/* Comentário */}
                 <div className="space-y-2">
                   <label className="block text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                     Comentário
@@ -195,11 +232,7 @@ function GameCard({ games }: GameCardProps) {
 
                 {status && (
                   <div
-                    className={`rounded-2xl border px-4 py-3 text-sm ${
-                      status.type === "success"
-                        ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-                        : "border-red-500/20 bg-red-500/10 text-red-400"
-                    }`}
+                    className={`rounded-2xl border px-4 py-3 text-sm ${status.type === "success" ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" : "border-red-500/20 bg-red-500/10 text-red-400"}`}
                   >
                     {status.message}
                   </div>
@@ -213,7 +246,6 @@ function GameCard({ games }: GameCardProps) {
                   >
                     Cancelar
                   </button>
-
                   <button
                     type="button"
                     onClick={handleSaveReview}

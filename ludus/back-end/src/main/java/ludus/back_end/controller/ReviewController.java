@@ -3,6 +3,7 @@ package ludus.back_end.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import ludus.back_end.entity.Review;
+import ludus.back_end.enums.GameStatus;
 import ludus.back_end.request.ReviewPostRequestBody;
 import ludus.back_end.request.ReviewPutRequestBody;
 import ludus.back_end.service.ReviewService;
@@ -43,5 +44,15 @@ public class ReviewController {
     public ResponseEntity<Void> deleteReview(@PathVariable Long id){
         reviewService.deleteReview(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Review>> listAllReviews(
+            @RequestParam(required = false) GameStatus status) {
+
+        if (status != null) {
+            return ResponseEntity.ok(reviewService.getReviewsByStatus(status));
+        }
+        return ResponseEntity.ok(reviewService.getAllReviews());
     }
 }
