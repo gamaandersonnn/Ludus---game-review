@@ -67,6 +67,7 @@ public class ReviewService {
                 .rating(dto.getRating())
                 .comment(dto.getComment())
                 .backgroundImg(dto.getBackgroundImg())
+                .favorite(dto.isFavorite())
                 .status(dto.getStatus())
                 .user(user)
                 .build());
@@ -85,6 +86,7 @@ public class ReviewService {
         review.setName(dto.getName());
         review.setRating(dto.getRating());
         review.setComment(dto.getComment());
+        review.setFavorite(dto.isFavorite());
         review.setStatus(dto.getStatus());
         return reviewRepository.save(review);
     }
@@ -100,6 +102,20 @@ public class ReviewService {
         }
 
         reviewRepository.delete(review);
+    }
+
+    public Review toggleFavorite(Long id) {
+        User user = getLoggedUser();
+
+        Review review = reviewRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
+
+        if (!review.getUser().getUid().equals(user.getUid())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado");
+        }
+
+        review.setFavorite(!review.isFavorite());
+        return reviewRepository.save(review);
     }
 
     public List<Review> getReviewsByStatus(GameStatus status){

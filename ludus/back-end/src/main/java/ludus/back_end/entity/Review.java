@@ -30,6 +30,8 @@ public class Review {
     @Enumerated(EnumType.STRING)
     private GameStatus status;
 
+    private boolean favorite;
+
     @ManyToOne
     @JoinColumn(name = "user_uid")
     private User user;

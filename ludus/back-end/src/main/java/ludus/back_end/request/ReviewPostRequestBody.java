@@ -21,6 +21,8 @@ public class ReviewPostRequestBody {
 
     private String backgroundImg;
 
+    private boolean favorite;
+
     @NotNull
     private GameStatus status;
 }

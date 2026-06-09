@@ -20,10 +20,10 @@ public class ReviewController {
 
     public final ReviewService reviewService;
 
-    @GetMapping
-    public ResponseEntity<List<Review>> listAllReviews(){
-        return ResponseEntity.ok(reviewService.getAllReviews());
-    }
+//    @GetMapping
+//    public ResponseEntity<List<Review>> listAllReviews(){
+//        return ResponseEntity.ok(reviewService.getAllReviews());
+//    }
 
     @GetMapping(path = "/{id}")
     public ResponseEntity<Review> findReviewById(@PathVariable long id){
@@ -44,6 +44,11 @@ public class ReviewController {
     public ResponseEntity<Void> deleteReview(@PathVariable Long id){
         reviewService.deleteReview(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/favorite")
+    public ResponseEntity<Review> toggleFavorite(@PathVariable Long id) {
+        return ResponseEntity.ok(reviewService.toggleFavorite(id));
     }
 
     @GetMapping
