@@ -32,30 +32,3 @@ build/
 ### VS Code ###
 .vscode/
 
-# Build Maven
-target/
-
-# Logs
-*.log
-
-# Configurações locais
-application-local.properties
-application-local.yml
-application-dev.properties
-application-dev.yml
-
-# Variáveis de ambiente
-.env
-.env.*
-
-# IDE
-.idea/
-*.iml
-
-# Eclipse
-.project
-.classpath
-.settings/
-
-# VS Code
-.vscode/
