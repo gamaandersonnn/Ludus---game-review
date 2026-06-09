@@ -32,8 +32,3 @@ build/
 ### VS Code ###
 .vscode/
 
-target/
-firebase-service-account.json
-application.yml
-secrets/
-*.log
