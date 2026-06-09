@@ -23,20 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 
-frontend/node_modules/
-frontend/dist/
-
-backend/target/
-
+node_modules/
+dist/
 .env
 .env.*
-
-firebase-service-account.json
-secrets/
-application.yml
-
-.idea/
-.vscode/
-*.iml
-
-*.log
