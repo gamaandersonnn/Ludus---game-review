@@ -23,4 +23,30 @@ dist-ssr
 *.sln
 *.sw?
 
-back-end/
+# Frontend
+node_modules/
+dist/
+
+# Backend
+back-end/target/
+
+# Variáveis de ambiente
+.env
+.env.*
+
+# Credenciais
+firebase-service-account.json
+secrets/
+application.yml
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# Logs
+*.log
+
+# Sistema
+.DS_Store
+Thumbs.db
