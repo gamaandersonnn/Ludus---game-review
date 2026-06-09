@@ -38,6 +38,7 @@ back-end/target/
 firebase-service-account.json
 secrets/
 application.yml
+docker-compose.yml
 
 # IDEs
 .idea/
